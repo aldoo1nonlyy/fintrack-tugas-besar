@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../app/routes.dart';
 import '../../providers/app_data_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../services/tutorial_service.dart';
 import '../../utils/constants.dart';
 import '../../utils/formatters.dart';
@@ -76,6 +77,8 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppDataProvider>();
+    final authProvider = context.watch<AuthProvider>();
+    final userName = authProvider.user?.displayName ?? 'Pengguna';
     final financialSummary = provider.financialSummary;
 
     return Stack(
@@ -163,9 +166,9 @@ class _HomeScreenState extends State<HomeScreen>
                                   color: Colors.white.withValues(alpha: 0.16),
                                   borderRadius: BorderRadius.circular(999),
                                 ),
-                                child: const Text(
-                                  'Ringkasan usaha hari ini',
-                                  style: TextStyle(
+                                child: Text(
+                                  'Halo, $userName 👋',
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -173,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen>
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'Kelola invoice, bon, pelanggan, dan stok barang usaha dari satu aplikasi.',
+                                'Ringkasan usaha hari ini',
                                 style: Theme.of(context)
                                     .textTheme
                                     .headlineSmall

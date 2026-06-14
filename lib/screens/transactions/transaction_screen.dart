@@ -61,10 +61,28 @@ class TransactionScreen extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.note_alt_rounded, color: Colors.orange),
               title: const Text('Bon'),
-              subtitle: const Text('Catatan hutang/bon'),
+              subtitle: const Text('Catatan piutang sederhana'),
               onTap: () {
                 Navigator.pop(context);
                 AppRoutes.push(context, AppRoutes.bonForm);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.assignment_ind_rounded, color: Colors.green),
+              title: const Text('Hutang Pelanggan'),
+              subtitle: const Text('Catatan kasbon pelanggan'),
+              onTap: () {
+                Navigator.pop(context);
+                AppRoutes.push(context, AppRoutes.hutangForm);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.business_rounded, color: Colors.purple),
+              title: const Text('Hutang Toko (Usaha)'),
+              subtitle: const Text('Catatan hutang ke supplier'),
+              onTap: () {
+                Navigator.pop(context);
+                AppRoutes.push(context, AppRoutes.hutangUsahaForm);
               },
             ),
           ],
@@ -92,6 +110,7 @@ class _TransactionTab extends StatelessWidget {
     final List<_TransactionItem> items = [];
     for (final inv in invoices) {
       items.add(_TransactionItem(
+        id: inv.id,
         title: inv.number,
         subtitle: inv.customerName,
         date: inv.date,
@@ -102,6 +121,7 @@ class _TransactionTab extends StatelessWidget {
     }
     for (final bon in bons) {
       items.add(_TransactionItem(
+        id: bon.id,
         title: bon.customerName,
         subtitle: 'Bon',
         date: bon.date,
@@ -154,9 +174,9 @@ class _TransactionTab extends StatelessWidget {
             ),
             onTap: () {
               if (isInvoice) {
-                AppRoutes.push(context, AppRoutes.invoiceDetail, arguments: item.title);
+                AppRoutes.push(context, AppRoutes.invoiceDetail, arguments: item.id);
               } else {
-                AppRoutes.push(context, AppRoutes.bonDetail, arguments: item.title);
+                AppRoutes.push(context, AppRoutes.bonDetail, arguments: item.id);
               }
             },
           ),
@@ -167,6 +187,7 @@ class _TransactionTab extends StatelessWidget {
 }
 
 class _TransactionItem {
+  final String id;
   final String title;
   final String subtitle;
   final DateTime date;
@@ -175,6 +196,7 @@ class _TransactionItem {
   final dynamic status;
 
   _TransactionItem({
+    required this.id,
     required this.title,
     required this.subtitle,
     required this.date,

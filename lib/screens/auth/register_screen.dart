@@ -15,6 +15,8 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
 
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
@@ -23,6 +25,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
+    _nameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -35,6 +39,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     context.read<AuthProvider>().clearError();
 
     final success = await context.read<AuthProvider>().register(
+      name: _nameController.text,
+      username: _usernameController.text,
       email: _emailController.text,
       password: _passwordController.text,
     );
@@ -113,6 +119,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                               const SizedBox(height: 20),
                               TextFormField(
+                                controller: _nameController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Nama Lengkap',
+                                  hintText: 'John Doe',
+                                  prefixIcon: Icon(Icons.badge_outlined),
+                                ),
+                                textCapitalization: TextCapitalization.words,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Nama tidak boleh kosong';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _usernameController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Username',
+                                  hintText: 'contoh123',
+                                  prefixIcon: Icon(Icons.person_outline),
+                                ),
+                                keyboardType: TextInputType.text,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Username tidak boleh kosong';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
                                 controller: _emailController,
                                 decoration: const InputDecoration(
                                   labelText: 'Email',
@@ -125,7 +163,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     return 'Email tidak boleh kosong';
                                   }
                                   if (!value.contains('@')) {
-                                    return 'Email tidak valid';
+                                    return 'Format email tidak valid';
                                   }
                                   return null;
                                 },

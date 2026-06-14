@@ -25,14 +25,14 @@ class AuthProvider extends ChangeNotifier {
     });
   }
 
-  /// Login dengan email dan password Firebase Auth
-  Future<bool> login({required String email, required String password}) async {
+  /// Login dengan email atau username dan password Firebase Auth
+  Future<bool> login({required String identifier, required String password}) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      await _authService.signIn(email: email, password: password);
+      await _authService.signIn(identifier: identifier, password: password);
       _isLoading = false;
       notifyListeners();
       return true;
@@ -49,14 +49,19 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Daftar akun baru dengan email dan password Firebase Auth
-  Future<bool> register({required String email, required String password}) async {
+  /// Daftar akun baru dengan nama, username, email dan password Firebase Auth
+  Future<bool> register({
+    required String name,
+    required String username,
+    required String email,
+    required String password,
+  }) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      await _authService.signUp(email: email, password: password);
+      await _authService.signUp(name: name, username: username, email: email, password: password);
       _isLoading = false;
       notifyListeners();
       return true;

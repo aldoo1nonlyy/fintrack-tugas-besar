@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/bon.dart';
 import '../models/business_profile.dart';
@@ -35,16 +36,33 @@ class AppDataProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   AppDataProvider(this.storageService, this.firebaseService) {
-    _loadData();
+    _loadLocalData();
+    
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user == null) {
+        clearData();
+      } else {
+        _syncFromFirebase();
+      }
+    });
   }
 
-  /// Muat data: pertama dari cache lokal, lalu sinkronisasi dari Firestore
-  void _loadData() {
-    _loadLocalData();
-    // Hanya sync dari Firebase jika pengguna sudah login
-    if (firebaseService.isLoggedIn) {
-      _syncFromFirebase();
-    }
+  void clearData() {
+    _customers = [];
+    _products = [];
+    _invoices = [];
+    _bons = [];
+    _hutangs = [];
+    _hutangUsahas = [];
+    _financialEntries = [];
+    _businessProfile = BusinessProfile(
+      businessName: 'Toko Saya',
+      address: 'Alamat Toko',
+      phone: '08123456789',
+      invoiceFooter: 'Terima kasih atas kepercayaannya',
+    );
+    storageService.clearAll();
+    notifyListeners();
   }
 
   void _loadLocalData() {
@@ -228,6 +246,7 @@ class AppDataProvider extends ChangeNotifier {
         type: isPaid ? FinancialEntryType.income : FinancialEntryType.receivable,
         sourceLabel: 'Invoice',
         sourceId: invoice.id,
+        status: invoice.status,
       );
     });
 
@@ -244,6 +263,7 @@ class AppDataProvider extends ChangeNotifier {
         type: isPaid ? FinancialEntryType.income : FinancialEntryType.receivable,
         sourceLabel: 'Bon',
         sourceId: bon.id,
+        status: bon.status,
       );
     });
 
@@ -260,6 +280,7 @@ class AppDataProvider extends ChangeNotifier {
         type: isPaid ? FinancialEntryType.income : FinancialEntryType.receivable,
         sourceLabel: 'Hutang',
         sourceId: hutang.id,
+        status: hutang.status,
       );
     });
 
@@ -276,6 +297,7 @@ class AppDataProvider extends ChangeNotifier {
         type: isPaid ? FinancialEntryType.expense : FinancialEntryType.payable,
         sourceLabel: 'Hutang Usaha',
         sourceId: hu.id,
+        status: hu.status,
       );
     });
 
@@ -299,10 +321,18 @@ class AppDataProvider extends ChangeNotifier {
           expense += entry.amount;
           break;
         case FinancialEntryType.payable:
-          payable += entry.amount;
+          if (entry.status == TransactionStatus.paid) {
+            expense += entry.amount;
+          } else {
+            payable += entry.amount;
+          }
           break;
         case FinancialEntryType.receivable:
-          receivable += entry.amount;
+          if (entry.status == TransactionStatus.paid) {
+            income += entry.amount;
+          } else {
+            receivable += entry.amount;
+          }
           break;
       }
     }
@@ -592,6 +622,16 @@ class AppDataProvider extends ChangeNotifier {
     storageService.saveFinancialEntries(_financialEntries);
     firebaseService.deleteFinancialEntry(id);
     notifyListeners();
+  }
+
+  void markFinancialEntryAsPaid(String id) {
+    final index = _financialEntries.indexWhere((element) => element.id == id);
+    if (index != -1) {
+      _financialEntries[index] = _financialEntries[index].copyWith(status: TransactionStatus.paid);
+      storageService.saveFinancialEntries(_financialEntries);
+      firebaseService.saveFinancialEntry(_financialEntries[index]);
+      notifyListeners();
+    }
   }
 
   // --- Business Profile ---

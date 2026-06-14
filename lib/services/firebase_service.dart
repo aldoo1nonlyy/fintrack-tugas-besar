@@ -197,6 +197,7 @@ class FirebaseService {
     'type': e.type.index,
     'sourceLabel': e.sourceLabel,
     'sourceId': e.sourceId,
+    'status': e.status?.index,
   };
 
   FinancialEntry _financialFromMap(Map<String, dynamic> map) => FinancialEntry(
@@ -208,6 +209,7 @@ class FirebaseService {
     type: FinancialEntryType.values[(map['type'] as int?) ?? 0],
     sourceLabel: map['sourceLabel'] ?? 'Manual',
     sourceId: map['sourceId'],
+    status: map['status'] != null ? TransactionStatus.values[map['status'] as int] : null,
   );
 
   Map<String, dynamic> _profileToMap(BusinessProfile e) => {

@@ -14,13 +14,13 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscureText = true;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
     context.read<AuthProvider>().clearError();
 
     final success = await context.read<AuthProvider>().login(
-      email: _emailController.text,
+      identifier: _usernameController.text,
       password: _passwordController.text,
     );
 
@@ -118,24 +118,21 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                'Gunakan email dan password yang sudah terdaftar.',
+                                'Gunakan email atau username yang sudah terdaftar.',
                                 style: Theme.of(context).textTheme.bodyMedium,
                               ),
                               const SizedBox(height: 20),
                               TextFormField(
-                                controller: _emailController,
-                                keyboardType: TextInputType.emailAddress,
+                                controller: _usernameController,
+                                keyboardType: TextInputType.text,
                                 decoration: const InputDecoration(
-                                  labelText: 'Email',
-                                  hintText: 'contoh@email.com',
-                                  prefixIcon: Icon(Icons.email_outlined),
+                                  labelText: 'Email atau Username',
+                                  hintText: 'contoh@email.com / user123',
+                                  prefixIcon: Icon(Icons.person_outline),
                                 ),
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
-                                    return 'Email wajib diisi';
-                                  }
-                                  if (!value.contains('@')) {
-                                    return 'Format email tidak valid';
+                                    return 'Email atau Username wajib diisi';
                                   }
                                   return null;
                                 },

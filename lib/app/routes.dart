@@ -20,6 +20,7 @@ import '../screens/transactions/hutang_detail_screen.dart';
 import '../screens/transactions/hutang_form_screen.dart';
 import '../screens/transactions/hutang_usaha_detail_screen.dart';
 import '../screens/transactions/hutang_usaha_form_screen.dart';
+import '../screens/finance/financial_entry_detail_screen.dart';
 import '../models/hutang_usaha.dart';
 
 class AppRoutes {
@@ -36,7 +37,8 @@ class AppRoutes {
   static const hutangDetail = '/hutang/detail';
   static const bonForm = '/bon/form';
   static const bonDetail = '/bon/detail';
-  static const hutangUsahaForm = '/hutang-usaha/form';
+  static const String hutangUsahaForm = '/hutang-usaha-form';
+  static const String financialEntryDetail = '/financial-entry-detail';
   static const hutangUsahaDetail = '/hutang-usaha/detail';
   static const finance = '/finance';
 
@@ -128,6 +130,11 @@ class AppRoutes {
         return _buildRoute(
           settings,
           HutangUsahaDetailScreen(hutangUsahaId: hutangUsahaId),
+        );
+      case financialEntryDetail:
+        final args = settings.arguments;
+        return MaterialPageRoute(
+          builder: (_) => FinancialEntryDetailScreen(id: args as String),
         );
       default:
         return _buildRoute(settings, const LoginScreen());

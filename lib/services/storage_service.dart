@@ -128,6 +128,7 @@ class StorageService {
       'type': e.type.index,
       'sourceLabel': e.sourceLabel,
       'sourceId': e.sourceId,
+      'status': e.status?.index,
     }).toList();
     await prefs.setString(_keyFinancialEntries, jsonEncode(jsonList));
   }
@@ -140,6 +141,17 @@ class StorageService {
       'invoiceFooter': profile.invoiceFooter,
     };
     await prefs.setString(_keyProfile, jsonEncode(jsonMap));
+  }
+
+  Future<void> clearAll() async {
+    await prefs.remove(_keyCustomers);
+    await prefs.remove(_keyProducts);
+    await prefs.remove(_keyInvoices);
+    await prefs.remove(_keyBons);
+    await prefs.remove(_keyHutangs);
+    await prefs.remove(_keyHutangUsahas);
+    await prefs.remove(_keyFinancialEntries);
+    await prefs.remove(_keyProfile);
   }
 
   // --- LOAD METHODS ---
@@ -253,6 +265,7 @@ class StorageService {
       type: FinancialEntryType.values[e['type'] as int],
       sourceLabel: e['sourceLabel'] ?? 'Manual',
       sourceId: e['sourceId'],
+      status: e['status'] != null ? TransactionStatus.values[e['status'] as int] : null,
     )).toList();
   }
 
