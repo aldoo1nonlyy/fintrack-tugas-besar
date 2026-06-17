@@ -7,14 +7,13 @@ password: 12345678
 Frontend mobile app sederhana dengan Flutter untuk kebutuhan pencatatan invoice dan bon usaha kecil / UMKM.
 
 ## Fitur
-- Login simulasi tanpa backend
+- Login dan Register
 - Dashboard ringkas
 - Manajemen pelanggan
 - Manajemen item/jasa
 - Transaksi Invoice dan Bon
 - Detail transaksi
 - Profil usaha
-- Dummy data lokal
 
 ## Stack
 - Flutter
