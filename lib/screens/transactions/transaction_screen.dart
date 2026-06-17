@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../app/routes.dart';
 import '../../providers/app_data_provider.dart';
+import '../../utils/constants.dart';
+import '../../widgets/search_bar_field.dart';
 import 'combined_transaction_list_screen.dart';
 import 'hutang_usaha_list_screen.dart';
 
@@ -12,14 +14,15 @@ class TransactionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Transaksi'),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Semua'),
-              Tab(text: 'Transaksi'),
+              Tab(text: 'Invoice'),
+              Tab(text: 'Bon'),
               Tab(text: 'Hutang Toko'),
             ],
           ),
@@ -27,7 +30,8 @@ class TransactionScreen extends StatelessWidget {
         body: const TabBarView(
           children: [
             CombinedTransactionListScreen(),
-            _TransactionTab(),
+            _TransactionTab(filterType: 'Invoice'),
+            _TransactionTab(filterType: 'Bon'),
             HutangUsahaListScreen(),
           ],
         ),
@@ -67,15 +71,7 @@ class TransactionScreen extends StatelessWidget {
                 AppRoutes.push(context, AppRoutes.bonForm);
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.assignment_ind_rounded, color: Colors.green),
-              title: const Text('Hutang Pelanggan'),
-              subtitle: const Text('Catatan kasbon pelanggan'),
-              onTap: () {
-                Navigator.pop(context);
-                AppRoutes.push(context, AppRoutes.hutangForm);
-              },
-            ),
+
             ListTile(
               leading: const Icon(Icons.business_rounded, color: Colors.purple),
               title: const Text('Hutang Toko (Usaha)'),
@@ -98,8 +94,16 @@ class TransactionScreen extends StatelessWidget {
   }
 }
 
-class _TransactionTab extends StatelessWidget {
-  const _TransactionTab();
+class _TransactionTab extends StatefulWidget {
+  final String filterType;
+  const _TransactionTab({required this.filterType});
+
+  @override
+  State<_TransactionTab> createState() => _TransactionTabState();
+}
+
+class _TransactionTabState extends State<_TransactionTab> {
+  String _search = '';
 
   @override
   Widget build(BuildContext context) {
@@ -108,42 +112,60 @@ class _TransactionTab extends StatelessWidget {
     final bons = provider.bons;
 
     final List<_TransactionItem> items = [];
-    for (final inv in invoices) {
-      items.add(_TransactionItem(
-        id: inv.id,
-        title: inv.number,
-        subtitle: inv.customerName,
-        date: inv.date,
-        amount: inv.total,
-        type: 'Invoice',
-        status: inv.status,
-      ));
-    }
-    for (final bon in bons) {
-      items.add(_TransactionItem(
-        id: bon.id,
-        title: bon.customerName,
-        subtitle: 'Bon',
-        date: bon.date,
-        amount: bon.amount,
-        type: 'Bon',
-        status: bon.status,
-      ));
+    if (widget.filterType == 'Invoice') {
+      for (final inv in invoices) {
+        items.add(_TransactionItem(
+          id: inv.id,
+          title: inv.number,
+          subtitle: inv.customerName,
+          date: inv.date,
+          amount: inv.total,
+          type: 'Invoice',
+          status: inv.status,
+        ));
+      }
+    } else if (widget.filterType == 'Bon') {
+      for (final bon in bons) {
+        items.add(_TransactionItem(
+          id: bon.id,
+          title: bon.customerName,
+          subtitle: 'Bon',
+          date: bon.date,
+          amount: bon.amount,
+          type: 'Bon',
+          status: bon.status,
+        ));
+      }
     }
     items.sort((a, b) => b.date.compareTo(a.date));
 
-    if (items.isEmpty) {
-      return const Center(
-        child: Text('Belum ada transaksi Invoice atau Bon'),
-      );
-    }
+    final filteredItems = items.where((item) {
+      if (_search.isEmpty) return true;
+      final q = _search.toLowerCase();
+      return item.title.toLowerCase().contains(q) ||
+             item.subtitle.toLowerCase().contains(q);
+    }).toList();
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final item = items[index];
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.screenPadding),
+      child: Column(
+        children: [
+          SearchBarField(
+            hintText: 'Cari ${widget.filterType}',
+            onChanged: (value) => setState(() => _search = value),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: filteredItems.isEmpty
+                ? Center(
+                    child: Text('Belum ada transaksi ${widget.filterType}'),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.only(bottom: 100),
+                    itemCount: filteredItems.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final item = filteredItems[index];
         final isInvoice = item.type == 'Invoice';
 
         return Card(
@@ -181,7 +203,11 @@ class _TransactionTab extends StatelessWidget {
             },
           ),
         );
-      },
+                    },
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }

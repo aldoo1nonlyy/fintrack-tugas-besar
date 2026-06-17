@@ -37,36 +37,36 @@ class ProductDetailScreen extends StatelessWidget {
       };
     }).toList();
 
-    // Find all hutang containing this product
-    final hutangMatches = provider.hutangs.where((hut) => 
-      hut.items.any((item) => item.itemName == product.name)
-    ).map((hut) {
-      final line = hut.items.firstWhere((item) => item.itemName == product.name);
+    // Find all bons containing this product
+    final bonMatches = provider.bons.where((bon) => 
+      bon.items.any((item) => item.itemName == product.name)
+    ).map((bon) {
+      final line = bon.items.firstWhere((item) => item.itemName == product.name);
       return {
-        'id': hut.id,
-        'doc_number': hut.number,
-        'customer': hut.customerName,
+        'id': bon.id,
+        'doc_number': 'Bon ${bon.id}',
+        'customer': bon.customerName,
         'qty': line.qty,
         'price': line.price,
-        'date': hut.date,
-        'status': hut.status,
-        'type': 'Hutang',
-        'route': AppRoutes.hutangDetail,
+        'date': bon.date,
+        'status': bon.status,
+        'type': 'Bon',
+        'route': AppRoutes.bonDetail,
       };
     }).toList();
 
-    final history = [...invoiceMatches, ...hutangMatches];
+    final history = [...invoiceMatches, ...bonMatches];
     history.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
 
     // Calculate totals
     int totalQtySold = 0;
-    int totalQtyHutang = 0;
+    int totalQtyBon = 0;
 
     for (var item in history) {
       if (item['type'] == 'Invoice') {
         totalQtySold += item['qty'] as int;
-      } else if (item['type'] == 'Hutang') {
-        totalQtyHutang += item['qty'] as int;
+      } else if (item['type'] == 'Bon') {
+        totalQtyBon += item['qty'] as int;
       }
     }
 
@@ -169,9 +169,9 @@ class ProductDetailScreen extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _StatCard(
-                          title: 'Dihutang',
-                          value: totalQtyHutang.toString(),
-                          icon: Icons.money_off_rounded,
+                          title: 'Bon',
+                          value: totalQtyBon.toString(),
+                          icon: Icons.receipt_long,
                           color: AppColors.error,
                         ),
                       ),

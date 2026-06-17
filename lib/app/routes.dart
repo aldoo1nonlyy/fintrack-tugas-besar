@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/bon.dart';
 import '../models/customer.dart';
 import '../models/invoice.dart';
-import '../models/hutang.dart';
 import '../models/product_item.dart';
+import '../screens/auth/forgot_password_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/customers/customer_form_screen.dart';
@@ -16,8 +16,6 @@ import '../screens/transactions/bon_detail_screen.dart';
 import '../screens/transactions/bon_form_screen.dart';
 import '../screens/transactions/invoice_detail_screen.dart';
 import '../screens/transactions/invoice_form_screen.dart';
-import '../screens/transactions/hutang_detail_screen.dart';
-import '../screens/transactions/hutang_form_screen.dart';
 import '../screens/transactions/hutang_usaha_detail_screen.dart';
 import '../screens/transactions/hutang_usaha_form_screen.dart';
 import '../screens/finance/financial_entry_detail_screen.dart';
@@ -26,6 +24,7 @@ import '../models/hutang_usaha.dart';
 class AppRoutes {
   static const login = '/login';
   static const register = '/register';
+  static const forgotPassword = '/forgot-password';
   static const shell = '/shell';
   static const customerForm = '/customer/form';
   static const customerDetail = '/customer/detail';
@@ -33,8 +32,6 @@ class AppRoutes {
   static const productDetail = '/product/detail';
   static const invoiceForm = '/invoice/form';
   static const invoiceDetail = '/invoice/detail';
-  static const hutangForm = '/hutang/form';
-  static const hutangDetail = '/hutang/detail';
   static const bonForm = '/bon/form';
   static const bonDetail = '/bon/detail';
   static const String hutangUsahaForm = '/hutang-usaha-form';
@@ -48,6 +45,8 @@ class AppRoutes {
         return _buildRoute(settings, const LoginScreen());
       case register:
         return _buildRoute(settings, const RegisterScreen());
+      case forgotPassword:
+        return _buildRoute(settings, const ForgotPasswordScreen());
       case shell:
         final initialIndex = settings.arguments as int? ?? 0;
         return _buildRoute(
@@ -89,23 +88,11 @@ class AppRoutes {
           settings,
           InvoiceFormScreen(invoice: invoice),
         );
-      case hutangForm:
-        final hutang = settings.arguments as Hutang?;
-        return _buildRoute(
-          settings,
-          HutangFormScreen(hutang: hutang),
-        );
       case invoiceDetail:
         final invoiceId = settings.arguments as String;
         return _buildRoute(
           settings,
           InvoiceDetailScreen(invoiceId: invoiceId),
-        );
-      case hutangDetail:
-        final hutangId = settings.arguments as String;
-        return _buildRoute(
-          settings,
-          HutangDetailScreen(hutangId: hutangId),
         );
       case bonForm:
         final bon = settings.arguments as Bon?;

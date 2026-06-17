@@ -109,6 +109,35 @@ class BonDetailScreen extends StatelessWidget {
               ),
             ),
 
+            // Rincian Barang (hanya tampil jika ada items)
+            if (bon.items.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Rincian Barang',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Card(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: bon.items.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final item = bon.items[index];
+                    return ListTile(
+                      title: Text(item.itemName, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text('${item.qty} x ${AppFormatters.currency(item.price)}'),
+                      trailing: Text(
+                        AppFormatters.currency(item.subtotal),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+
             // ── Footer usaha (hanya tampil jika tidak kosong) ──
             if (footerText.isNotEmpty) ...[
               const SizedBox(height: 16),

@@ -166,7 +166,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                   return null;
                                 },
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  onPressed: () => AppRoutes.push(
+                                    context,
+                                    AppRoutes.forgotPassword,
+                                  ),
+                                  child: const Text('Lupa Password?'),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
                               // Tampilkan error dari Firebase Auth
                               Consumer<AuthProvider>(
                                 builder: (context, auth, _) {

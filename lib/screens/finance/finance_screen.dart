@@ -552,9 +552,7 @@ class _FinancialEntryTile extends StatelessWidget {
         } else {
           final route = entry.sourceLabel == 'Hutang Usaha'
               ? AppRoutes.hutangUsahaDetail
-              : (entry.sourceLabel == 'Hutang'
-                  ? AppRoutes.hutangDetail
-                  : (entry.sourceLabel == 'Invoice' ? AppRoutes.invoiceDetail : AppRoutes.bonDetail));
+              : (entry.sourceLabel == 'Invoice' ? AppRoutes.invoiceDetail : AppRoutes.bonDetail);
           AppRoutes.push(
             context,
             route,
@@ -726,50 +724,83 @@ class _FinanceFormSheetState extends State<FinanceFormSheet> {
                   if (value != null) setState(() => _type = value);
                 },
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Judul', hintText: 'Contoh: Bayar Listrik / Gaji Karyawan',
+              if (_type == FinancialEntryType.receivable && widget.entry == null) ...[
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(Icons.info_outline_rounded, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Pencatatan Piutang Customer sekarang diintegrasikan dengan Bon agar otomatis masuk ke Riwayat Transaksi.',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            AppRoutes.push(context, AppRoutes.bonForm);
+                          },
+                          icon: const Icon(Icons.receipt_long_rounded),
+                          label: const Text('Buka Form Bon (Piutang)'),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Judul wajib diisi';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _amountController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Nominal', hintText: 'Contoh: 100000',
+              ] else ...[
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Judul', hintText: 'Contoh: Bayar Listrik / Gaji Karyawan',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Judul wajib diisi';
+                    }
+                    return null;
+                  },
                 ),
-                validator: (value) {
-                  final amount = _parseAmount(value ?? '');
-                  if (amount <= 0) return 'Nominal harus lebih dari 0';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _descriptionController,
-                minLines: 2,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  labelText: 'Catatan', hintText: 'Contoh: Pembayaran tempo 14 hari',
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _amountController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Nominal', hintText: 'Contoh: 100000',
+                  ),
+                  validator: (value) {
+                    final amount = _parseAmount(value ?? '');
+                    if (amount <= 0) return 'Nominal harus lebih dari 0';
+                    return null;
+                  },
                 ),
-              ),
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _save,
-                  icon: const Icon(Icons.save_rounded),
-                  label: const Text('Simpan dan hitung otomatis'),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _descriptionController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Catatan', hintText: 'Contoh: Pembayaran tempo 14 hari',
+                  ),
                 ),
-              ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _save,
+                    icon: const Icon(Icons.save_rounded),
+                    label: const Text('Simpan dan hitung otomatis'),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

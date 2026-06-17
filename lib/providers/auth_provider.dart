@@ -78,6 +78,30 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Kirim email reset password
+  Future<bool> resetPassword(String email) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _authService.sendPasswordReset(email);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } on FirebaseAuthException catch (e) {
+      _errorMessage = AuthService.translateError(e);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _errorMessage = 'Terjadi kesalahan tidak terduga.';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Logout dari Firebase
   Future<void> logout() async {
     await _authService.signOut();

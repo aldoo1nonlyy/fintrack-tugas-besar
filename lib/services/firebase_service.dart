@@ -6,7 +6,6 @@ import '../models/customer.dart';
 import '../models/product_item.dart';
 import '../models/invoice.dart';
 import '../models/bon.dart';
-import '../models/hutang.dart';
 import '../models/hutang_usaha.dart';
 import '../models/financial_entry.dart';
 import '../models/business_profile.dart';
@@ -42,8 +41,6 @@ class FirebaseService {
   CollectionReference<Map<String, dynamic>> get _bonsCol =>
       _db.collection('users').doc(_uid).collection('bons');
 
-  CollectionReference<Map<String, dynamic>> get _hutangsCol =>
-      _db.collection('users').doc(_uid).collection('hutangs');
 
   CollectionReference<Map<String, dynamic>> get _hutangUsahasCol =>
       _db.collection('users').doc(_uid).collection('hutangUsahas');
@@ -55,6 +52,7 @@ class FirebaseService {
       _db.collection('users').doc(_uid).collection('settings').doc('profile');
 
   // --- MAP CONVERSION HELPERS ---
+
 
   Map<String, dynamic> _customerToMap(Customer e) => {
     'id': e.id,
@@ -119,54 +117,34 @@ class FirebaseService {
   );
 
   Map<String, dynamic> _bonToMap(Bon e) => {
-    'id': e.id,
-    'customerName': e.customerName,
-    'amount': e.amount,
-    'date': e.date.toIso8601String(),
-    'notes': e.notes,
-    'status': e.status.index,
-  };
+        'id': e.id,
+        'customerName': e.customerName,
+        'amount': e.amount,
+        'date': e.date.toIso8601String(),
+        'notes': e.notes,
+        'status': e.status.index,
+        'items': e.items.map((i) => {
+          'id': i.id,
+          'itemName': i.itemName,
+          'qty': i.qty,
+          'price': i.price,
+        }).toList(),
+      };
 
   Bon _bonFromMap(Map<String, dynamic> map) => Bon(
-    id: map['id'] ?? '',
-    customerName: map['customerName'] ?? '',
-    amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
-    date: DateTime.tryParse(map['date'] ?? '') ?? DateTime.now(),
-    notes: map['notes'] ?? '',
-    status: TransactionStatus.values[(map['status'] as int?) ?? 0],
-  );
-
-  Map<String, dynamic> _hutangToMap(Hutang e) => {
-    'id': e.id,
-    'number': e.number,
-    'customerId': e.customerId,
-    'customerName': e.customerName,
-    'date': e.date.toIso8601String(),
-    'notes': e.notes,
-    'status': e.status.index,
-    'items': e.items.map((i) => {
-      'id': i.id,
-      'itemName': i.itemName,
-      'qty': i.qty,
-      'price': i.price,
-    }).toList(),
-  };
-
-  Hutang _hutangFromMap(Map<String, dynamic> map) => Hutang(
-    id: map['id'] ?? '',
-    number: map['number'] ?? '',
-    customerId: map['customerId'] ?? '',
-    customerName: map['customerName'] ?? '',
-    date: DateTime.tryParse(map['date'] ?? '') ?? DateTime.now(),
-    notes: map['notes'] ?? '',
-    status: TransactionStatus.values[(map['status'] as int?) ?? 0],
-    items: ((map['items'] as List<dynamic>?) ?? []).map((i) => HutangLine(
-      id: i['id'] ?? '',
-      itemName: i['itemName'] ?? '',
-      qty: (i['qty'] as num?)?.toInt() ?? 0,
-      price: (i['price'] as num?)?.toDouble() ?? 0.0,
-    )).toList(),
-  );
+        id: map['id'] ?? '',
+        customerName: map['customerName'] ?? '',
+        amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
+        date: map['date'] != null ? DateTime.tryParse(map['date']) ?? DateTime.now() : DateTime.now(),
+        notes: map['notes'] ?? '',
+        status: TransactionStatus.values[(map['status'] as int?) ?? 0],
+        items: map['items'] == null ? <BonLine>[] : (map['items'] as List<dynamic>).map((i) => BonLine(
+          id: i['id'] ?? '',
+          itemName: i['itemName'] ?? '',
+          qty: (i['qty'] as num?)?.toInt() ?? 0,
+          price: (i['price'] as num?)?.toDouble() ?? 0.0,
+        )).toList(),
+      );
 
   Map<String, dynamic> _hutangUsahaToMap(HutangUsaha e) => {
     'id': e.id,
@@ -338,34 +316,6 @@ class FirebaseService {
     }
   }
 
-  // --- CRUD: Hutangs ---
-
-  Future<List<Hutang>> fetchHutangs() async {
-    try {
-      final snap = await _hutangsCol.get();
-      return snap.docs.map((doc) => _hutangFromMap(doc.data())).toList();
-    } catch (e) {
-      debugPrint('Firestore fetchHutangs Error: $e');
-      return [];
-    }
-  }
-
-  Future<void> saveHutang(Hutang item) async {
-    try {
-      await _hutangsCol.doc(item.id).set(_hutangToMap(item));
-    } catch (e) {
-      debugPrint('Firestore saveHutang Error: $e');
-    }
-  }
-
-  Future<void> deleteHutang(String id) async {
-    try {
-      await _hutangsCol.doc(id).delete();
-    } catch (e) {
-      debugPrint('Firestore deleteHutang Error: $e');
-    }
-  }
-
   // --- CRUD: HutangUsahas ---
 
   Future<List<HutangUsaha>> fetchHutangUsahas() async {
@@ -453,7 +403,6 @@ class FirebaseService {
     required List<ProductItem> products,
     required List<Invoice> invoices,
     required List<Bon> bons,
-    required List<Hutang> hutangs,
     required List<HutangUsaha> hutangUsahas,
     required List<FinancialEntry> financialEntries,
     required BusinessProfile businessProfile,
@@ -488,11 +437,6 @@ class FirebaseService {
     }
     for (final e in bons) {
       batch.set(_bonsCol.doc(e.id), _bonToMap(e));
-      count++;
-      await maybeCommit();
-    }
-    for (final e in hutangs) {
-      batch.set(_hutangsCol.doc(e.id), _hutangToMap(e));
       count++;
       await maybeCommit();
     }

@@ -48,18 +48,6 @@ class CustomerDetailScreen extends StatelessWidget {
       });
     }
 
-    // 3. Hutangs
-    for (final htg in provider.hutangs.where((e) => e.customerId == customer.id)) {
-      userTransactions.add({
-        'id': htg.id,
-        'doc_number': htg.number,
-        'amount': htg.total,
-        'date': htg.date,
-        'status': htg.status,
-        'type': 'Hutang',
-        'route': AppRoutes.hutangDetail,
-      });
-    }
 
     userTransactions.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
 
@@ -282,11 +270,11 @@ class CustomerDetailScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'fab_customer_detail',
         onPressed: () {
-          // Defaultnya buat hutang baru untuk user ini jika menekan FAB
-          AppRoutes.push(context, AppRoutes.hutangForm);
+          // Defaultnya buat bon baru untuk user ini jika menekan FAB
+          AppRoutes.push(context, AppRoutes.bonForm);
         },
         icon: const Icon(Icons.add),
-        label: const Text('Buat Hutang'),
+        label: const Text('Buat Bon'),
         backgroundColor: AppColors.error,
         foregroundColor: Colors.white,
       ),

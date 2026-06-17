@@ -1,24 +1,20 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/bon.dart';
 import '../models/business_profile.dart';
 import '../models/customer.dart';
 import '../models/financial_entry.dart';
-import '../models/product_item.dart';
-import '../models/transaction_status.dart';
-
-// Since some models don't have their own files imported everywhere, we use AppDataProvider's models.
-import '../models/bon.dart';
-import '../models/hutang.dart';
 import '../models/hutang_usaha.dart';
 import '../models/invoice.dart';
+import '../models/product_item.dart';
+import '../models/transaction_status.dart';
 
 class StorageService {
   static const String _keyCustomers = 'customers_data';
   static const String _keyProducts = 'products_data';
   static const String _keyInvoices = 'invoices_data';
   static const String _keyBons = 'bons_data';
-  static const String _keyHutangs = 'hutangs_data';
   static const String _keyHutangUsahas = 'hutang_usahas_data';
   static const String _keyFinancialEntries = 'financial_entries_data';
   static const String _keyProfile = 'business_profile_data';
@@ -82,27 +78,14 @@ class StorageService {
       'date': e.date.toIso8601String(),
       'notes': e.notes,
       'status': e.status.index,
-    }).toList();
-    await prefs.setString(_keyBons, jsonEncode(jsonList));
-  }
-
-  Future<void> saveHutangs(List<Hutang> list) async {
-    final jsonList = list.map((e) => {
-      'id': e.id,
-      'number': e.number,
-      'customerId': e.customerId,
-      'customerName': e.customerName,
-      'date': e.date.toIso8601String(),
       'items': e.items.map((i) => {
         'id': i.id,
         'itemName': i.itemName,
         'qty': i.qty,
         'price': i.price,
       }).toList(),
-      'notes': e.notes,
-      'status': e.status.index,
     }).toList();
-    await prefs.setString(_keyHutangs, jsonEncode(jsonList));
+    await prefs.setString(_keyBons, jsonEncode(jsonList));
   }
 
   Future<void> saveHutangUsahas(List<HutangUsaha> list) async {
@@ -148,7 +131,6 @@ class StorageService {
     await prefs.remove(_keyProducts);
     await prefs.remove(_keyInvoices);
     await prefs.remove(_keyBons);
-    await prefs.remove(_keyHutangs);
     await prefs.remove(_keyHutangUsahas);
     await prefs.remove(_keyFinancialEntries);
     await prefs.remove(_keyProfile);
@@ -205,32 +187,17 @@ class StorageService {
   List<Bon> loadBons() {
     final str = prefs.getString(_keyBons);
     if (str == null) return [];
-    final List<dynamic> jsonList = jsonDecode(str);
+    final jsonList = jsonDecode(str) as List<dynamic>;
     return jsonList.map((e) => Bon(
-      id: e['id'],
-      customerName: e['customerName'],
+      id: e['id'] as String,
+      customerName: e['customerName'] as String,
       amount: (e['amount'] as num).toDouble(),
-      date: DateTime.parse(e['date']),
-      notes: e['notes'],
+      date: DateTime.parse(e['date'] as String),
+      notes: e['notes'] as String,
       status: TransactionStatus.values[e['status'] as int],
-    )).toList();
-  }
-
-  List<Hutang> loadHutangs() {
-    final str = prefs.getString(_keyHutangs);
-    if (str == null) return [];
-    final List<dynamic> jsonList = jsonDecode(str);
-    return jsonList.map((e) => Hutang(
-      id: e['id'],
-      number: e['number'],
-      customerId: e['customerId'],
-      customerName: e['customerName'],
-      date: DateTime.parse(e['date']),
-      notes: e['notes'],
-      status: TransactionStatus.values[e['status'] as int],
-      items: (e['items'] as List<dynamic>).map((i) => HutangLine(
-        id: i['id'],
-        itemName: i['itemName'],
+      items: e['items'] == null ? <BonLine>[] : (e['items'] as List<dynamic>).map((i) => BonLine(
+        id: i['id'] as String,
+        itemName: i['itemName'] as String,
         qty: i['qty'] as int,
         price: (i['price'] as num).toDouble(),
       )).toList(),

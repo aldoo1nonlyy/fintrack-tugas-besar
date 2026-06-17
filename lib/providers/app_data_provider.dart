@@ -5,7 +5,6 @@ import '../models/bon.dart';
 import '../models/business_profile.dart';
 import '../models/customer.dart';
 import '../models/invoice.dart';
-import '../models/hutang.dart';
 import '../models/hutang_usaha.dart';
 import '../models/financial_entry.dart';
 import '../models/product_item.dart';
@@ -22,7 +21,6 @@ class AppDataProvider extends ChangeNotifier {
   List<ProductItem> _products = [];
   List<Invoice> _invoices = [];
   List<Bon> _bons = [];
-  List<Hutang> _hutangs = [];
   List<HutangUsaha> _hutangUsahas = [];
   List<FinancialEntry> _financialEntries = [];
   BusinessProfile _businessProfile = BusinessProfile(
@@ -52,7 +50,6 @@ class AppDataProvider extends ChangeNotifier {
     _products = [];
     _invoices = [];
     _bons = [];
-    _hutangs = [];
     _hutangUsahas = [];
     _financialEntries = [];
     _businessProfile = BusinessProfile(
@@ -70,7 +67,6 @@ class AppDataProvider extends ChangeNotifier {
     _products = storageService.loadProducts();
     _invoices = storageService.loadInvoices();
     _bons = storageService.loadBons();
-    _hutangs = storageService.loadHutangs();
     _hutangUsahas = storageService.loadHutangUsahas();
     _financialEntries = storageService.loadFinancialEntries();
 
@@ -94,7 +90,6 @@ class AppDataProvider extends ChangeNotifier {
         firebaseService.fetchProducts(),
         firebaseService.fetchInvoices(),
         firebaseService.fetchBons(),
-        firebaseService.fetchHutangs(),
         firebaseService.fetchHutangUsahas(),
         firebaseService.fetchFinancialEntries(),
       ]);
@@ -103,9 +98,8 @@ class AppDataProvider extends ChangeNotifier {
       final fbProducts = results[1] as List<ProductItem>;
       final fbInvoices = results[2] as List<Invoice>;
       final fbBons = results[3] as List<Bon>;
-      final fbHutangs = results[4] as List<Hutang>;
-      final fbHutangUsahas = results[5] as List<HutangUsaha>;
-      final fbFinancials = results[6] as List<FinancialEntry>;
+      final fbHutangUsahas = results[4] as List<HutangUsaha>;
+      final fbFinancials = results[5] as List<FinancialEntry>;
       final fbProfile = await firebaseService.fetchBusinessProfile();
 
       if (fbCustomers.isNotEmpty) {
@@ -123,10 +117,6 @@ class AppDataProvider extends ChangeNotifier {
       if (fbBons.isNotEmpty) {
         _bons = fbBons;
         await storageService.saveBons(_bons);
-      }
-      if (fbHutangs.isNotEmpty) {
-        _hutangs = fbHutangs;
-        await storageService.saveHutangs(_hutangs);
       }
       if (fbHutangUsahas.isNotEmpty) {
         _hutangUsahas = fbHutangUsahas;
@@ -160,7 +150,6 @@ class AppDataProvider extends ChangeNotifier {
       products: _products,
       invoices: _invoices,
       bons: _bons,
-      hutangs: _hutangs,
       hutangUsahas: _hutangUsahas,
       financialEntries: _financialEntries,
       businessProfile: _businessProfile,
@@ -173,7 +162,6 @@ class AppDataProvider extends ChangeNotifier {
   List<ProductItem> get products => List.unmodifiable(_products);
   List<Invoice> get invoices => List.unmodifiable(_invoices);
   List<Bon> get bons => List.unmodifiable(_bons);
-  List<Hutang> get hutangs => List.unmodifiable(_hutangs);
   List<HutangUsaha> get hutangUsahas => List.unmodifiable(_hutangUsahas);
   List<FinancialEntry> get financialEntries => List.unmodifiable(_financialEntries);
   BusinessProfile get businessProfile => _businessProfile;
@@ -203,17 +191,6 @@ class AppDataProvider extends ChangeNotifier {
       },
     );
 
-    final hutangTransactions = _hutangs.map(
-      (hutang) => {
-        'id': hutang.id,
-        'title': hutang.number,
-        'subtitle': hutang.customerName,
-        'amount': hutang.total,
-        'date': hutang.date,
-        'status': hutang.status,
-        'type': 'Hutang',
-      },
-    );
 
     final hutangUsahaTransactions = _hutangUsahas.map(
       (hu) => {
@@ -227,7 +204,7 @@ class AppDataProvider extends ChangeNotifier {
       },
     );
 
-    final merged = [...invoiceTransactions, ...bonTransactions, ...hutangTransactions, ...hutangUsahaTransactions];
+    final merged = [...invoiceTransactions, ...bonTransactions, ...hutangUsahaTransactions];
     merged.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
     return merged;
   }
@@ -267,22 +244,6 @@ class AppDataProvider extends ChangeNotifier {
       );
     });
 
-    final autoFromHutangs = _hutangs.map((hutang) {
-      final isPaid = hutang.status == TransactionStatus.paid;
-      return FinancialEntry(
-        id: 'AUTO-${hutang.id}',
-        title: 'Hutang ${hutang.customerName}',
-        description: isPaid
-            ? 'Hutang dilunasi pelanggan dan dihitung sebagai pemasukan.'
-            : 'Hutang baru diambil oleh pelanggan.',
-        amount: hutang.total,
-        date: hutang.date,
-        type: isPaid ? FinancialEntryType.income : FinancialEntryType.receivable,
-        sourceLabel: 'Hutang',
-        sourceId: hutang.id,
-        status: hutang.status,
-      );
-    });
 
     final autoFromHutangUsahas = _hutangUsahas.map((hu) {
       final isPaid = hu.status == TransactionStatus.paid;
@@ -301,7 +262,7 @@ class AppDataProvider extends ChangeNotifier {
       );
     });
 
-    final merged = [...autoFromInvoices, ...autoFromBons, ...autoFromHutangs, ...autoFromHutangUsahas, ..._financialEntries];
+    final merged = [...autoFromInvoices, ...autoFromBons, ...autoFromHutangUsahas, ..._financialEntries];
     merged.sort((a, b) => b.date.compareTo(a.date));
     return merged;
   }
@@ -350,12 +311,10 @@ class AppDataProvider extends ChangeNotifier {
   int get unpaidCount =>
       _invoices.where((e) => e.status == TransactionStatus.unpaid).length +
       _bons.where((e) => e.status == TransactionStatus.unpaid).length +
-      _hutangs.where((e) => e.status == TransactionStatus.unpaid).length +
       _hutangUsahas.where((e) => e.status == TransactionStatus.unpaid).length;
   int get overdueCount =>
       _invoices.where((e) => e.status == TransactionStatus.overdue).length +
       _bons.where((e) => e.status == TransactionStatus.overdue).length +
-      _hutangs.where((e) => e.status == TransactionStatus.overdue).length +
       _hutangUsahas.where((e) => e.status == TransactionStatus.overdue).length;
 
   List<Map<String, dynamic>> get recentTransactions => combinedDocumentTransactions.take(6).toList();
@@ -386,13 +345,6 @@ class AppDataProvider extends ChangeNotifier {
     }
   }
 
-  Hutang? findHutangById(String id) {
-    try {
-      return _hutangs.firstWhere((element) => element.id == id);
-    } catch (_) {
-      return null;
-    }
-  }
 
   HutangUsaha? findHutangUsahaById(String id) {
     try {
@@ -526,41 +478,6 @@ class AppDataProvider extends ChangeNotifier {
     }
   }
 
-  // --- CRUD: Hutangs ---
-
-  void addHutang(Hutang hutang) {
-    _hutangs.insert(0, hutang);
-    storageService.saveHutangs(_hutangs);
-    firebaseService.saveHutang(hutang);
-    notifyListeners();
-  }
-
-  void updateHutang(Hutang hutang) {
-    final index = _hutangs.indexWhere((element) => element.id == hutang.id);
-    if (index != -1) {
-      _hutangs[index] = hutang;
-      storageService.saveHutangs(_hutangs);
-      firebaseService.saveHutang(hutang);
-      notifyListeners();
-    }
-  }
-
-  void deleteHutang(String id) {
-    _hutangs.removeWhere((element) => element.id == id);
-    storageService.saveHutangs(_hutangs);
-    firebaseService.deleteHutang(id);
-    notifyListeners();
-  }
-
-  void markHutangAsPaid(String id) {
-    final index = _hutangs.indexWhere((element) => element.id == id);
-    if (index != -1) {
-      _hutangs[index] = _hutangs[index].copyWith(status: TransactionStatus.paid);
-      storageService.saveHutangs(_hutangs);
-      firebaseService.saveHutang(_hutangs[index]);
-      notifyListeners();
-    }
-  }
 
   // --- CRUD: HutangUsahas ---
 
@@ -702,27 +619,6 @@ class AppDataProvider extends ChangeNotifier {
     }
   }
 
-  String generateHutangId() {
-    int nextNum = _hutangs.length + 1;
-    while (true) {
-      final id = 'H${nextNum.toString().padLeft(3, '0')}';
-      if (!_hutangs.any((e) => e.id == id)) {
-        return id;
-      }
-      nextNum++;
-    }
-  }
-
-  String generateHutangNumber() {
-    int nextNum = _hutangs.length + 1;
-    while (true) {
-      final numStr = 'HTG-2026-${nextNum.toString().padLeft(3, '0')}';
-      if (!_hutangs.any((e) => e.number == numStr)) {
-        return numStr;
-      }
-      nextNum++;
-    }
-  }
 
   String generateHutangUsahaId() {
     int nextNum = _hutangUsahas.length + 1;

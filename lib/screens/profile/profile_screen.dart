@@ -27,11 +27,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   final _footerController = TextEditingController();
 
   bool _isInitialized = false;
-  bool _isSyncing = false;
   bool _showTutorial = false;
-
-  // Settings toggles
-  bool _notifEnabled = false;
 
   late AnimationController _saveButtonController;
   late Animation<double> _saveButtonScale;
@@ -74,7 +70,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   void _save() {
     if (!_formKey.currentState!.validate()) return;
 
-    _saveButtonController.forward().then((_) => _saveButtonController.reverse());
+    _saveButtonController
+        .forward()
+        .then((_) => _saveButtonController.reverse());
     HapticFeedback.mediumImpact();
 
     final profile = BusinessProfile(
@@ -88,30 +86,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Profil usaha berhasil disimpan ✅')),
     );
-  }
-
-  Future<void> _syncNow() async {
-    setState(() => _isSyncing = true);
-    try {
-      await context.read<AppDataProvider>().refreshFromFirebase();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Data berhasil disinkronisasi dari Firebase!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Sinkronisasi gagal: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _isSyncing = false);
-    }
   }
 
   Future<void> _logout() async {
@@ -134,10 +108,41 @@ class _ProfileScreenState extends State<ProfileScreen>
     if (mounted) setState(() => _showTutorial = false);
   }
 
+  InputDecoration _buildInputDecoration(
+    BuildContext context,
+    String label,
+    String hint,
+    IconData icon, {
+    String? helperText,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      helperText: helperText,
+      prefixIcon: Icon(icon),
+      filled: true,
+      fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: colorScheme.primary, width: 2),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Stack(
       children: [
         Scaffold(
@@ -173,18 +178,21 @@ class _ProfileScreenState extends State<ProfileScreen>
                       children: [
                         Text(
                           'Identitas Usaha',
-                          style:
-                              Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                  ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                              ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Atur nama usaha, alamat, nomor kontak, dan catatan footer invoice di sini.',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.82),
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.82),
+                                  ),
                         ),
                       ],
                     ),
@@ -200,57 +208,59 @@ class _ProfileScreenState extends State<ProfileScreen>
                           TextFormField(
                             controller: _businessNameController,
                             textInputAction: TextInputAction.next,
-                            decoration: const InputDecoration(
-                              labelText: 'Nama usaha',
-                              hintText: 'Contoh: Toko Sembako Berkah',
-                              prefixIcon: Icon(Icons.storefront_outlined),
+                            decoration: _buildInputDecoration(
+                              context,
+                              'Nama usaha',
+                              'Contoh: Toko Sembako Berkah',
+                              Icons.storefront_outlined,
                             ),
                             validator: (value) =>
                                 value == null || value.trim().isEmpty
                                     ? 'Nama usaha wajib diisi'
                                     : null,
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 20),
                           TextFormField(
                             controller: _addressController,
                             maxLines: 3,
                             textInputAction: TextInputAction.next,
-                            decoration: const InputDecoration(
-                              labelText: 'Alamat',
-                              hintText: 'Contoh: Jl. Merdeka No. 12, Jakarta',
-                              prefixIcon: Icon(Icons.location_on_outlined),
+                            decoration: _buildInputDecoration(
+                              context,
+                              'Alamat',
+                              'Contoh: Jl. Merdeka No. 12, Jakarta',
+                              Icons.location_on_outlined,
                             ),
                             validator: (value) =>
                                 value == null || value.trim().isEmpty
                                     ? 'Alamat wajib diisi'
                                     : null,
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 20),
                           TextFormField(
                             controller: _phoneController,
                             keyboardType: TextInputType.phone,
                             textInputAction: TextInputAction.next,
-                            decoration: const InputDecoration(
-                              labelText: 'Nomor telepon / WhatsApp',
-                              hintText: 'Contoh: 081234567890',
-                              prefixIcon: Icon(Icons.phone_outlined),
+                            decoration: _buildInputDecoration(
+                              context,
+                              'Nomor telepon / WhatsApp',
+                              'Contoh: 081234567890',
+                              Icons.phone_outlined,
                             ),
                             validator: (value) =>
                                 value == null || value.trim().isEmpty
                                     ? 'Nomor telepon wajib diisi'
                                     : null,
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 20),
                           TextFormField(
                             controller: _footerController,
                             maxLines: 4,
-                            decoration: const InputDecoration(
-                              labelText: 'Catatan footer invoice / bon',
-                              hintText:
-                                  'Contoh: Terima kasih atas kunjungannya',
-                              prefixIcon: Icon(Icons.format_quote_rounded),
-                              helperText:
-                                  'Teks ini akan muncul di bagian bawah invoice & bon',
+                            decoration: _buildInputDecoration(
+                              context,
+                              'Catatan footer invoice / bon',
+                              'Contoh: Terima kasih atas kunjungannya',
+                              Icons.format_quote_rounded,
+                              helperText: 'Teks ini akan muncul di bagian bawah invoice & bon',
                             ),
                           ),
                         ],
@@ -259,8 +269,23 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                   const SizedBox(height: 20),
 
+                  // ── Tombol simpan ──
+                  ScaleTransition(
+                    scale: _saveButtonScale,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _save,
+                        icon: const Icon(Icons.save_rounded),
+                        label: const Text('Simpan Profil'),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
                   // ── Pengaturan Aplikasi ──
-                  const _SectionHeader(title: 'Pengaturan Aplikasi', icon: Icons.tune_rounded),
+                  const _SectionHeader(
+                      title: 'Pengaturan Aplikasi', icon: Icons.tune_rounded),
                   const SizedBox(height: 10),
                   Card(
                     child: Padding(
@@ -276,7 +301,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                             value: context.watch<ThemeProvider>().isDarkMode,
                             onChanged: (isDarkOn) {
                               HapticFeedback.selectionClick();
-                              context.read<ThemeProvider>().toggleTheme(isDarkOn);
+                              context
+                                  .read<ThemeProvider>()
+                                  .toggleTheme(isDarkOn);
                             },
                           ),
                           const Divider(height: 1, indent: 16, endIndent: 16),
@@ -290,155 +317,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                             value: false,
                             onChanged: _onTutorialToggle,
                           ),
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-
-                          // Notifikasi Toggle (UI placeholder)
-                          _SettingsTile(
-                            icon: Icons.notifications_rounded,
-                            iconColor: const Color(0xFFF59E0B),
-                            title: 'Notifikasi Transaksi',
-                            subtitle: 'Pengingat tagihan yang belum lunas',
-                            value: _notifEnabled,
-                            onChanged: (val) {
-                              HapticFeedback.selectionClick();
-                              setState(() => _notifEnabled = val);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    val
-                                        ? 'Notifikasi diaktifkan'
-                                        : 'Notifikasi dinonaktifkan',
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 20),
-
-                  // ── Status Firebase Cloud ──
-                  const _SectionHeader(
-                      title: 'Sinkronisasi Cloud', icon: Icons.cloud_rounded),
-                  const SizedBox(height: 10),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.cloud_done, color: Colors.green[600]),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Firebase Cloud (Aktif)',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Consumer<AuthProvider>(
-                            builder: (context, auth, _) {
-                              return Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withValues(alpha: 0.08),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                      color:
-                                          Colors.green.withValues(alpha: 0.4)),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.account_circle_outlined,
-                                      color: Colors.green,
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            'Terhubung ke Firebase',
-                                            style: TextStyle(
-                                              color: Colors.green,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                          if (auth.currentEmail != null)
-                                            Text(
-                                              auth.currentEmail!,
-                                              style: TextStyle(
-                                                color: Colors.green[700],
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Data Anda disimpan secara aman di Firestore dan ter-enkripsi per akun.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isDark
-                                  ? AppColors.mutedTextDark
-                                  : Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              onPressed: _isSyncing ? null : _syncNow,
-                              icon: _isSyncing
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2),
-                                    )
-                                  : const Icon(Icons.sync),
-                              label: Text(_isSyncing
-                                  ? 'Mensinkronkan...'
-                                  : 'Sinkronkan dari Cloud'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // ── Tombol simpan ──
-                  ScaleTransition(
-                    scale: _saveButtonScale,
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _save,
-                        icon: const Icon(Icons.save_rounded),
-                        label: const Text('Simpan Profil'),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -446,8 +329,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
 
         // Tutorial overlay (shown on top)
-        if (_showTutorial)
-          TutorialOverlay(onDone: _onTutorialDone),
+        if (_showTutorial) TutorialOverlay(onDone: _onTutorialDone),
       ],
     );
   }
